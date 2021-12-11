@@ -18,7 +18,12 @@ TOKEN_RULES: List[Tuple[str, re.Pattern]] = [
     (L_PAR, re.compile(r'\(')),
     (R_PAR, re.compile(r'\)')),
     (PROP, re.compile(r'p\d+')),
+    (NOT, re.compile(r'~')),
+    (AND, re.compile(r'&')),
+    (OR, re.compile(r'\|')),
+    (IMPLY, re.compile(r'->'))
 ]
+
 
 class TokenizationError(SyntaxError):
     def __init__(self, source: str, offset: int, message: str, filename: str = None):
@@ -27,7 +32,6 @@ class TokenizationError(SyntaxError):
         self.lineno = 0
         self.offset = offset
         self.text = source
-
 
 
 class Token:
@@ -40,6 +44,7 @@ class Token:
 
     def __str__(self):
         return f'<{self.type} {self.match.span(0)}>"{self.match.group(0)}"'
+
     def __repr__(self):
         return self.__str__()
 
@@ -55,14 +60,15 @@ def tokenize(text: str, filename: str = None):
             pattern = rule[1]
             last_match = pattern.match(text, offset)
             if last_match:
-              if type != SPACE:
-                tokens.append(Token(type, last_match))
-              # Early exit
-              break
+                if type != SPACE:
+                    tokens.append(Token(type, last_match))
+                # Early exit
+                break
         if last_match:
             offset = last_match.end()
             pass
         else:
-            raise TokenizationError(text, offset + 1, f'Invalid token at {offset + 1}', filename=filename)
+            raise TokenizationError(
+                text, offset + 1, f'Invalid token at {offset + 1}', filename=filename)
 
     return tokens
