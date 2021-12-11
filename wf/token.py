@@ -10,7 +10,9 @@ AND = 'AND'
 OR = 'OR'
 IMPLY = 'IMPLY'
 PROP = 'PROP'
-# EOF
+EOF = 'EOF'
+
+EOF_RULE = re.compile(r'$')
 
 # Terminal rules
 TOKEN_RULES: List[Tuple[str, re.Pattern]] = [
@@ -70,5 +72,8 @@ def tokenize(text: str, filename: str = None):
         else:
             raise TokenizationError(
                 text, offset + 1, f'Invalid token at {offset + 1}', filename=filename)
+    
+    # Emit EOF
+    tokens.append(Token(EOF, EOF_RULE.match(text, len(text))))
 
     return tokens
