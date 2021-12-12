@@ -10,7 +10,44 @@
       "group": {
         "kind": "build",
         "isDefault": true
-      }
+      },
+      "problemMatcher": [
+        {
+          "owner": "python",
+          "fileLocation": "autoDetect",
+          "pattern": [
+            {
+              "regexp": "^.*File \\\"([^\\\"]|.*\\.py)\\\", line (\\d+).*",
+              "file": 1,
+              "line": 2
+            },
+            {
+              "regexp": "^.*$"
+            },
+            {
+              "regexp": "^(?!\\s+File)\\s*([\\s\\S]*)\\s*",
+              "message": 1,
+              "loop": true
+            }
+          ]
+        },
+        {
+          "owner": "wf",
+          "fileLocation": "autoDetect",
+          "pattern": [
+            {
+              "regexp": "^([^(]+)\\s+\\(.*\\.wf, line (\\d+)\\) offset=(\\d+)",
+              "message": 1,
+              "line": 2,
+              "column": 3
+            },
+            {
+              "regexp": "^\\s+File \"([^\"]+)\"",
+              "file": 1
+            }
+          ]
+        }
+      ]
     }
   ]
 }

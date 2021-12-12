@@ -1,4 +1,5 @@
 import sys
+import traceback
 from wf.token import *
 from wf.node import *
 from typing import List
@@ -25,16 +26,17 @@ def parseTree(text: str, tokens: List[Token], filename: str = None):
             raise ParsingError(text, token, 'Unbalanced right parentheses', filename=filename)
         return stack.pop()
 
-    def push(n: Expression(token)):
+    def push(n: Expression):
         nonlocal stack
-        stack.push(n)
+        stack.append(n)
 
     def peek() -> Expression:
         nonlocal stack
         return stack[len(stack) - 1]
 
     def appendChild(n: Node):
-        peek().children.append(n)
+        top = peek()
+        top.children.append(n)
 
     def removeLastChild() -> Node:
         return peek().children.pop()
@@ -42,23 +44,46 @@ def parseTree(text: str, tokens: List[Token], filename: str = None):
     def consume_token():
         nonlocal token_index
         token_index += 1
+    def open_expr(t: Token, should_append: bool = False) -> Expression:
+        # Create a new sub expression
+        sub_expr = Expression(t)
+        # Append child 
+        should_append and appendChild(sub_expr)
+        # Push stack
+        push(sub_expr)
+        return sub_expr
+    def close_expr():
+        # Right parenthesis, pop stack
+        pop()
+
+    def look_ahead() -> Token:
+        nonlocal token_index
+        return tokens[token_index + 1]
+
+    def look_ahead_for_operand() -> Node:
+        next_token = look_ahead()
+
+        if next_token.type == PROP:
+            return Prop(next_token)
+        if next_token.type == L_PAR:
+            return open_expr(next_token) 
+
+        raise ParsingError(text, next_token, f'Unexpected token type {next_token.type} (Invalid operand)', filename=filename)
+
 
     while token_index < len(tokens):
         token = tokens[token_index]
 
         if token.type == R_PAR:
-            # Right parenthesis, pop stack
-            pop()
+            close_expr()
         elif token.type == L_PAR:
-            # TODO
-            # push()
-            pass
+            open_expr(token, True)
         elif token.type == NOT:
             neg_node = NotOp(token)
             appendChild(neg_node)
-            # TODO: look ahead, next token must be a Prop or Expression
-            # neg_node.oprand = parse_next_token_if_legal
-            # consume_token()
+            # Look ahead, next token must be a Prop or Expression
+            neg_node.operand = look_ahead_for_operand()
+            consume_token()
 
         elif token.type == AND or token.type == OR or token.type == IMPLY: 
             # &p1
@@ -72,8 +97,10 @@ def parseTree(text: str, tokens: List[Token], filename: str = None):
                 appendChild(binary_op)
                 # Left hand side
                 binary_op.lhs = last_node
-                # TODO: look ahead, next token must be a Prop or Expression
-                # binary_op.rhs = ?
+                # Look ahead, next token must be a Prop or Expression
+                binary_op.rhs = look_ahead_for_operand()
+                consume_token()
+
             except IndexError:
                 # Missing lhs
                 raise ParsingError(text, token, 'Missing left operand', filename=filename)
@@ -104,9 +131,12 @@ def parse(text: str, filename: str = None):
 if __name__ == "__main__":
     filename = sys.argv[1]
     try:
-        f = open(filename, 'r')
-        text = f.read()
-        print(f"Parsing: {text}")
-        print(parse(text, filename=filename))
+        with open(filename, 'r') as f:
+            text = f.read()
+            print(f"Parsing: {text}")
+            print(format_tree((parse(text, filename=filename))))
     except FileNotFoundError as e:
         print(e)
+    except SyntaxError as e:
+        print(f'{e} offset={e.offset}')
+        traceback.print_exception(SyntaxError, e, None)
