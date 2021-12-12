@@ -19,7 +19,7 @@ TOKEN_RULES: List[Tuple[str, re.Pattern]] = [
     (SPACE, re.compile(r'\s+')),
     (L_PAR, re.compile(r'\(')),
     (R_PAR, re.compile(r'\)')),
-    (PROP, re.compile(r'p\d+')),
+    (PROP, re.compile(r'p(\d+)')),
     (NOT, re.compile(r'~')),
     (AND, re.compile(r'&')),
     (OR, re.compile(r'\|')),

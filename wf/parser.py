@@ -134,7 +134,9 @@ if __name__ == "__main__":
         with open(filename, 'r') as f:
             text = f.read()
             print(f"Parsing: {text}")
-            print(format_tree((parse(text, filename=filename))))
+            root = parse(text, filename=filename)
+            print(format_tree((root)))
+
     except FileNotFoundError as e:
         print(e)
     except SyntaxError as e:
